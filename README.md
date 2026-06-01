@@ -1,28 +1,24 @@
 # RUNEBOUND — Production Codebase
 
-## How to Play (Development)
+## Troubleshooting "Failed to resolve entry for package 'three'"
 
-1. **Install Dependencies**:
-   ```bash
-   npm install
-   ```
-2. **Start Server**:
-   ```bash
-   cd packages/server
-   npm run build
-   npm start
-   ```
-3. **Start Client**:
-   ```bash
-   cd packages/client
-   npm run dev
-   ```
-4. **Gameplay**:
-   - **Hold 'Q'**: Enter Drawing Mode. A cyan line will follow your pointer.
-   - **Draw**: Create a gesture (e.g., a circle) on the screen.
-   - **Release 'Q'**: The gesture is processed. If successful, a magical fire circle appears in front of the player.
+This error usually happens if `node_modules` are not properly linked in the monorepo.
 
-## Core Systems
-- **Mathematical Gesture Recognition**: Optimized $1 Unistroke algorithm.
-- **Visual Feedback**: Real-time 3D line drawing and shader-based spell effects.
-- **Authoritative Server**: 60Hz loop, Quadtree collisions, and anti-cheat validation.
+**Run these commands to fix:**
+```bash
+# 1. Clear everything
+rm -rf node_modules package-lock.json packages/*/node_modules
+
+# 2. Install from root
+npm install
+
+# 3. Start client
+cd packages/client
+npm run dev
+```
+
+## How to Play
+
+- **Hold 'Q'**: Enter Drawing Mode (Cyan line appears).
+- **Draw**: Make a Circle or Triangle.
+- **Release 'Q'**: Casting occurs.

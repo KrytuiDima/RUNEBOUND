@@ -4,12 +4,19 @@ import path from 'path';
 export default defineConfig({
   resolve: {
     alias: {
-      '@runebound/shared': path.resolve(__dirname, '../shared/src')
+      '@runebound/shared': path.resolve(__dirname, '../shared/src'),
+      'three': path.resolve(__dirname, '../../node_modules/three')
     }
   },
   server: {
     fs: {
-      allow: ['..']
+      allow: ['../..']
+    },
+    hmr: {
+      overlay: false
     }
+  },
+  optimizeDeps: {
+    include: ['three']
   }
 });

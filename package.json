@@ -5,6 +5,11 @@
     "packages/*"
   ],
   "devDependencies": {
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "three": "^0.170.0",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.48.0"
   }
 }
