@@ -1,1 +1,29 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Runebound</title><style>body { margin: 0; overflow: hidden; background: #000; } #hud { position: absolute; top: 20px; left: 20px; color: #f0a500; font-family: serif; pointer-events: none; }</style></head><body><div id="app"></div><div id="hud"><h1>RUNEBOUND</h1><p>Hold 'Q' to draw runes</p></div><script type="module" src="/src/index.ts"></script></body></html>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Runebound</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #06060e; color: #d8d8f0; font-family: 'Lato', sans-serif; }
+        #hud {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            pointer-events: none;
+            text-shadow: 0 0 10px rgba(240,165,0,0.5);
+        }
+        h1 { font-family: serif; color: #f0a500; letter-spacing: 4px; margin: 0; }
+        .hint { color: #00d4ff; font-size: 14px; margin-top: 8px; }
+        #hud-status { color: #f0a500; font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <div id="hud">
+        <h1>RUNEBOUND</h1>
+        <div class="hint">HOLD 'Q' TO DRAW MAGIC</div>
+        <div id="hud-status">IDLE</div>
+    </div>
+    <script type="module" src="/src/index.ts"></script>
+</body>
+</html>
