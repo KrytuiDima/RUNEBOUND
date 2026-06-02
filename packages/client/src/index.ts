@@ -3,6 +3,7 @@ import { CoreRenderer } from './renderer/CoreRenderer';
 import { DrawingInputManager } from './input/DrawingStateMachine';
 import { SpellEffectManager } from './effects/SpellEffectManager';
 import { GestureProcessor } from './input/GestureProcessor';
+import { MovementController } from './input/MovementController';
 import { RUNE_TEMPLATES } from '@runebound/shared';
 
 console.log('Runebound: Initializing...');
@@ -22,26 +23,18 @@ try {
   core.scene.add(player);
 
   const inputManager = new DrawingInputManager(core.renderer, core.camera, player);
+  const moveController = new MovementController(player);
 
-  // Network Connection (Optional for local testing)
-  let socket: WebSocket | null = null;
-  try {
-    socket = new WebSocket('ws://localhost:9001');
-    socket.onopen = () => console.log('Connected to Server');
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'CAST_RESULT' && data.success) {
-        document.getElementById('hud-status')!.innerText = `SERVER: ${data.match}`;
-        spellManager.createFireCircle(player.position.clone().add(new THREE.Vector3(0, 0, -2)), 2);
-      }
-    };
-  } catch (e) {
-    console.warn('Server not available, running in local-only mode');
-  }
+  let lastTime = performance.now();
 
   function animate() {
     requestAnimationFrame(animate);
-    spellManager.update(performance.now() * 0.001);
+    const time = performance.now();
+    const dt = (time - lastTime) / 1000;
+    lastTime = time;
+
+    moveController.update(dt);
+    spellManager.update(time * 0.001);
     core.render();
   }
 
@@ -62,22 +55,13 @@ try {
             spellManager.createFireCircle(player.position.clone().add(new THREE.Vector3(0, 0, -2)), 2);
           }
         });
-
-        if (socket && socket.readyState === WebSocket.OPEN) {
-          const duration = points[points.length - 1].t - points[0].t;
-          socket.send(JSON.stringify({
-            type: 'STROKE_SUBMIT',
-            points: points,
-            strokeDuration: duration,
-            inputEntropy: 2.0,
-            clientTs: Date.now(),
-            playerId: 'player1'
-          }));
-        }
+      } else {
+        document.getElementById('hud-status')!.innerText = "IDLE";
       }
     }
   });
 
+  // Critical: Listen on window to capture moves even if mouse button is up/down
   window.addEventListener('pointermove', (e) => {
     inputManager.handlePointerMove(e.clientX, e.clientY);
   });
@@ -87,6 +71,4 @@ try {
 
 } catch (err) {
   console.error('Initialization failed:', err);
-  const hud = document.getElementById('hud-status');
-  if (hud) hud.innerText = 'ERROR: CHECK CONSOLE';
 }

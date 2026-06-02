@@ -10,7 +10,6 @@ export class DrawingInputManager {
   private isDrawing: boolean = false;
   private drawPlane: THREE.Plane;
 
-  // Visual Feedback
   private lineGeometry: THREE.BufferGeometry;
   private line: THREE.Line;
   private maxPoints = 256;
@@ -23,13 +22,16 @@ export class DrawingInputManager {
     this.raycaster = new THREE.Raycaster();
     this.drawPlane = new THREE.Plane();
 
-    // Initialize line for visual feedback
     this.lineGeometry = new THREE.BufferGeometry();
     const positions = new Float32Array(this.maxPoints * 3);
     this.lineGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    this.line = new THREE.Line(this.lineGeometry, new THREE.LineBasicMaterial({ color: 0x00d4ff, linewidth: 2 }));
+    this.line = new THREE.Line(this.lineGeometry, new THREE.LineBasicMaterial({ color: 0x00d4ff, linewidth: 4, depthTest: false }));
+    this.line.renderOrder = 999;
+    this.line.visible = false;
     this.line.frustumCulled = false;
-    player.add(this.line); // Attach to player for local space rendering
+
+    // Line is added to the scene globally to avoid complex local-to-world logic during drawing
+    player.parent?.add(this.line) || player.add(this.line);
   }
 
   public startDrawing() {
@@ -37,8 +39,8 @@ export class DrawingInputManager {
     this.strokeBuffer = [];
     this.currentLinePoints = [];
     this.updateDrawingPlane();
-    this.updateLineMesh();
     this.line.visible = true;
+    this.clearLineMesh();
   }
 
   public stopDrawing(): Point[] {
@@ -54,19 +56,19 @@ export class DrawingInputManager {
     this.drawPlane.setFromNormalAndCoplanarPoint(dir.negate(), planeOrigin);
   }
 
+  private clearLineMesh() {
+    const positions = this.line.geometry.attributes.position.array as Float32Array;
+    positions.fill(0);
+    this.line.geometry.attributes.position.needsUpdate = true;
+    this.line.geometry.setDrawRange(0, 0);
+  }
+
   private updateLineMesh() {
     const positions = this.line.geometry.attributes.position.array as Float32Array;
-    for (let i = 0; i < this.maxPoints; i++) {
-      if (i < this.currentLinePoints.length) {
-        positions[i * 3] = this.currentLinePoints[i].x;
-        positions[i * 3 + 1] = this.currentLinePoints[i].y;
-        positions[i * 3 + 2] = this.currentLinePoints[i].z;
-      } else {
-        // Hide unused points
-        positions[i * 3] = 0;
-        positions[i * 3 + 1] = 0;
-        positions[i * 3 + 2] = 0;
-      }
+    for (let i = 0; i < this.currentLinePoints.length; i++) {
+      positions[i * 3] = this.currentLinePoints[i].x;
+      positions[i * 3 + 1] = this.currentLinePoints[i].y;
+      positions[i * 3 + 2] = this.currentLinePoints[i].z;
     }
     this.line.geometry.attributes.position.needsUpdate = true;
     this.line.geometry.setDrawRange(0, this.currentLinePoints.length);
@@ -75,20 +77,25 @@ export class DrawingInputManager {
   public handlePointerMove(clientX: number, clientY: number) {
     if (!this.isDrawing) return;
 
-    const ndc = new THREE.Vector2((clientX / window.innerWidth) * 2 - 1, -(clientY / window.innerHeight) * 2 + 1);
-    this.raycaster.setFromCamera(ndc, this.camera);
+    // Use renderer's canvas rect for accurate NDC
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera({ x, y }, this.camera);
 
     const worldPt = new THREE.Vector3();
-    this.raycaster.ray.intersectPlane(this.drawPlane, worldPt);
+    const intersection = this.raycaster.ray.intersectPlane(this.drawPlane, worldPt);
 
-    if (worldPt) {
+    if (intersection) {
+      // For recognition, we need local coordinates
       const invMatrix = this.player.matrixWorld.clone().invert();
-      const localPt = worldPt.applyMatrix4(invMatrix);
+      const localPt = worldPt.clone().applyMatrix4(invMatrix);
 
       this.strokeBuffer.push({ x: localPt.x, y: localPt.y, t: performance.now() });
 
       if (this.currentLinePoints.length < this.maxPoints) {
-        this.currentLinePoints.push(localPt.clone());
+        this.currentLinePoints.push(worldPt.clone());
         this.updateLineMesh();
       }
     }
