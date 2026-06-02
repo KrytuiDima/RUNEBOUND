@@ -1,0 +1,12 @@
+{
+  "name": "@runebound/server",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": { "start": "node dist/index.js", "build": "tsc" },
+  "dependencies": {
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.48.0",
+    "redis": "^4.6.10",
+    "@supabase/supabase-js": "^2.38.4",
+    "@runebound/shared": "*"
+  }
+}
