@@ -1,5 +1,10 @@
 --!strict
-local Types = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Types"))
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Types = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Types"))
+
+local DamageEvent = ReplicatedStorage:FindFirstChild("DamageEvent") or Instance.new("RemoteEvent")
+DamageEvent.Name = "DamageEvent"
+DamageEvent.Parent = ReplicatedStorage
 
 local CombatEngine = {}
 
@@ -18,6 +23,9 @@ function CombatEngine.CastSpell(caster: Player, spell: any, origin: Vector3, dir
 		if humanoid then
 			humanoid:TakeDamage(damage)
 			print(caster.Name .. " hit " .. humanoid.Parent.Name .. " for " .. damage .. " damage with " .. spell.Name)
+
+			-- Fire damage event for UI
+			DamageEvent:FireClient(caster, humanoid.Parent, damage, humanoid.Health, humanoid.MaxHealth)
 		end
 	end
 

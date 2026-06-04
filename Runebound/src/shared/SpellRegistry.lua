@@ -47,6 +47,40 @@ for i, element in ipairs(ELEMENTS) do
 end
 
 -- Specialty Spells
+-- Specialty Spells & Standalone Gestures
+registerSpell({
+	ID = "InfernoBall",
+	Name = "Inferno Ball",
+	Description = "A large ball of fire.",
+	BaseDamage = 25,
+	ManaCost = 15,
+	Element = "Fire",
+	Tier = 1,
+	Symbols = {"Circle"}
+})
+
+registerSpell({
+	ID = "ManaBolt",
+	Name = "Mana Bolt",
+	Description = "A quick bolt of pure mana.",
+	BaseDamage = 10,
+	ManaCost = 5,
+	Element = "Arcane",
+	Tier = 1,
+	Symbols = {"Line"}
+})
+
+registerSpell({
+	ID = "Lightning",
+	Name = "LightningStrike",
+	Description = "A sharp strike of lightning.",
+	BaseDamage = 30,
+	ManaCost = 20,
+	Element = "Lightning",
+	Tier = 1,
+	Symbols = {"Zigzag"}
+})
+
 registerSpell({
 	ID = "Firebolt",
 	Name = "Firebolt",

@@ -5,6 +5,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
 local GestureRecognizer = require(script.Parent.GestureRecognizer)
+local VFXManager = require(script.Parent.VFXManager)
+local HUDController = require(script.Parent.HUDController)
 local Types = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Types"))
 
 local DrawingController = {}
@@ -12,13 +14,19 @@ local DrawingController = {}
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 local CastSpellEvent = ReplicatedStorage:WaitForChild("CastSpellEvent")
+local VFXEvent = ReplicatedStorage:WaitForChild("VFXEvent")
 
 local currentPoints: {Types.Point} = {}
+local allPointsInCombo: {Types.Point} = {}
+local currentCombo: {string} = {}
+local comboTimeoutTask: thread?
 local isDrawing = false
 local canvasGui: ScreenGui
 local canvasFrame: Frame
 
 function DrawingController.Init()
+	HUDController.Init()
+
 	-- Create UI
 	canvasGui = Instance.new("ScreenGui")
 	canvasGui.Name = "DrawingCanvas"
@@ -29,6 +37,11 @@ function DrawingController.Init()
 	canvasFrame.Size = UDim2.fromScale(1, 1)
 	canvasFrame.BackgroundTransparency = 1
 	canvasFrame.Parent = canvasGui
+
+	-- VFX Listener
+	VFXEvent.OnClientEvent:Connect(function(spellName, origin, direction)
+		VFXManager.PlaySpellEffect(spellName, origin, direction)
+	end)
 
 	-- Input Listeners
 	UserInputService.InputBegan:Connect(function(input, gameProcessed)
@@ -90,10 +103,49 @@ function DrawingController.FinishDrawing()
 	print("Recognized Gesture:", gesture, "Score:", score)
 
 	if score > 0.7 then
-		-- In a real scenario, we might collect multiple gestures for combo
-		CastSpellEvent:FireServer(gesture, currentPoints)
-	end
+		table.insert(currentCombo, gesture)
+		for _, p in ipairs(currentPoints) do
+			table.insert(allPointsInCombo, p)
+		end
 
+	-- Flash color based on recognition
+	local flashColor = Color3.fromRGB(0, 255, 255) -- Default Arcane/Mana
+	-- In the future, match color to element
+
+		for _, child in ipairs(canvasFrame:GetChildren()) do
+			if child:IsA("Frame") then
+			local originalColor = child.BackgroundColor3
+			child.BackgroundColor3 = Color3.new(1, 1, 1)
+			task.delay(0.1, function()
+				if child and child.Parent then
+					child.BackgroundColor3 = flashColor
+				end
+			end)
+			end
+		end
+
+	HUDController.UpdateCombo(currentCombo)
+
+		-- Reset timeout
+		if comboTimeoutTask then
+			task.cancel(comboTimeoutTask)
+		end
+
+		comboTimeoutTask = task.delay(1.5, function()
+			DrawingController.SubmitCombo()
+		end)
+	else
+		canvasFrame:ClearAllChildren()
+	end
+end
+
+function DrawingController.SubmitCombo()
+	if #currentCombo > 0 then
+		CastSpellEvent:FireServer(currentCombo, allPointsInCombo)
+		currentCombo = {}
+		allPointsInCombo = {}
+		HUDController.UpdateCombo({})
+	end
 	canvasFrame:ClearAllChildren()
 end
 

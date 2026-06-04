@@ -25,13 +25,21 @@ function DataManager.LoadData(player: Player)
 	end)
 
 	if success and data then
+		-- Ensure new fields from DEFAULT_DATA are present
+		for k, v in pairs(DEFAULT_DATA) do
+			if data[k] == nil then
+				data[k] = v
+			end
+		end
 		sessionData[player.UserId] = data
+		DataManager.SyncAttributes(player)
 	else
 		sessionData[player.UserId] = table.clone(DEFAULT_DATA)
 
 		-- Random assignment of starter element
 		local elements = {"Fire", "Water", "Earth", "Air"}
 		sessionData[player.UserId].FirstJoinElement = elements[math.random(1, #elements)]
+		DataManager.SyncAttributes(player)
 	end
 end
 
@@ -50,6 +58,17 @@ end
 function DataManager.UpdatePlayerData(player: Player, callback: (Types.PlayerData) -> Types.PlayerData)
 	if sessionData[player.UserId] then
 		sessionData[player.UserId] = callback(sessionData[player.UserId])
+		DataManager.SyncAttributes(player)
+	end
+end
+
+function DataManager.SyncAttributes(player: Player)
+	local data = sessionData[player.UserId]
+	if data then
+		player:SetAttribute("Mana", data.Mana)
+		player:SetAttribute("MaxMana", data.MaxMana)
+		player:SetAttribute("Level", data.Level)
+		player:SetAttribute("Element", data.FirstJoinElement or "None")
 	end
 end
 
