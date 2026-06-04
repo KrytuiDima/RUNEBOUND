@@ -1,7 +1,7 @@
 --!strict
 local Players = game:GetService("Players")
-local DataManager = require(script.Parent.DataManager)
-require(script.Parent.SpellServer)
+local DataManager = require(script.DataManager)
+require(script.SpellServer)
 
 Players.PlayerAdded:Connect(function(player)
 	DataManager.LoadData(player)

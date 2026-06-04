@@ -16,6 +16,8 @@ local manaBar: Frame
 local manaFill: Frame
 local manaText: TextLabel
 local elementLabel: TextLabel
+local expLabel: TextLabel
+local levelLabel: TextLabel
 local comboContainer: Frame
 local runebookFrame: Frame
 local targetFrame: Frame
@@ -66,6 +68,26 @@ function HUDController.Init()
 	elementLabel.TextSize = 18
 	elementLabel.Parent = hudGui
 
+	-- Exp and Level Labels
+	levelLabel = Instance.new("TextLabel")
+	levelLabel.Size = UDim2.new(0, 100, 0, 20)
+	levelLabel.Position = UDim2.new(0, 20, 0, 20)
+	levelLabel.Text = "Lv. 1"
+	levelLabel.TextColor3 = Color3.new(1, 1, 1)
+	levelLabel.Font = Enum.Font.GothamBold
+	levelLabel.TextSize = 18
+	levelLabel.Parent = hudGui
+
+	expLabel = Instance.new("TextLabel")
+	expLabel.Size = UDim2.new(0, 200, 0, 20)
+	expLabel.Position = UDim2.new(0, 20, 0, 40)
+	expLabel.Text = "EXP: 0/100"
+	expLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	expLabel.Font = Enum.Font.Gotham
+	expLabel.TextSize = 14
+	expLabel.TextXAlignment = Enum.TextXAlignment.Left
+	expLabel.Parent = hudGui
+
 	-- Combo Container
 	comboContainer = Instance.new("Frame")
 	comboContainer.Name = "ComboContainer"
@@ -101,20 +123,7 @@ function HUDController.Init()
 		SandboxEvent:FireServer(sandboxMode)
 	end)
 
-	-- Runebook Toggle
-	local bookButton = Instance.new("ImageButton")
-	bookButton.Name = "RunebookToggle"
-	bookButton.Size = UDim2.new(0, 40, 0, 40)
-	bookButton.Position = UDim2.new(1, -60, 1, -60)
-	bookButton.Image = "rbxassetid://6031280992" -- Placeholder book icon
-	bookButton.BackgroundTransparency = 1
-	bookButton.Parent = hudGui
-
-	HUDController.CreateRunebook()
-
-	bookButton.MouseButton1Click:Connect(function()
-		runebookFrame.Visible = not runebookFrame.Visible
-	end)
+	-- Runebook Toggle removed (Moved to SpellbookController)
 
 	-- Target Bar
 	targetFrame = Instance.new("Frame")
@@ -154,10 +163,20 @@ function HUDController.Init()
 	Player:GetAttributeChangedSignal("Element"):Connect(function()
 		HUDController.UpdateElement(Player:GetAttribute("Element"))
 	end)
+	Player:GetAttributeChangedSignal("Level"):Connect(function()
+		levelLabel.Text = "Lv. " .. (Player:GetAttribute("Level") or 1)
+	end)
+	Player:GetAttributeChangedSignal("Exp"):Connect(function()
+		local lv = Player:GetAttribute("Level") or 1
+		expLabel.Text = "EXP: " .. (Player:GetAttribute("Exp") or 0) .. "/" .. (lv * 100)
+	end)
 
 	-- Initial Sync
 	HUDController.UpdateMana(Player:GetAttribute("Mana") or 100, Player:GetAttribute("MaxMana") or 100)
 	HUDController.UpdateElement(Player:GetAttribute("Element") or "None")
+	levelLabel.Text = "Lv. " .. (Player:GetAttribute("Level") or 1)
+	local lv = Player:GetAttribute("Level") or 1
+	expLabel.Text = "EXP: " .. (Player:GetAttribute("Exp") or 0) .. "/" .. (lv * 100)
 end
 
 function HUDController.UpdateMana(current: number, max: number)
@@ -192,55 +211,6 @@ function HUDController.UpdateCombo(combo: {string})
 	end
 end
 
-function HUDController.CreateRunebook()
-	runebookFrame = Instance.new("Frame")
-	runebookFrame.Name = "Runebook"
-	runebookFrame.Size = UDim2.new(0, 300, 0, 400)
-	runebookFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
-	runebookFrame.BackgroundColor3 = Color3.fromRGB(40, 30, 20)
-	runebookFrame.Visible = false
-	runebookFrame.Parent = hudGui
-
-	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1, 0, 0, 40)
-	title.Text = "RUNEBOOK"
-	title.TextColor3 = Color3.fromRGB(255, 200, 100)
-	title.Font = Enum.Font.Antique
-	title.TextSize = 24
-	title.BackgroundTransparency = 1
-	title.Parent = runebookFrame
-
-	local scrollingFrame = Instance.new("ScrollingFrame")
-	scrollingFrame.Size = UDim2.new(1, -20, 1, -60)
-	scrollingFrame.Position = UDim2.new(0, 10, 0, 50)
-	scrollingFrame.BackgroundTransparency = 1
-	scrollingFrame.CanvasSize = UDim2.new(0, 0, 2, 0)
-	scrollingFrame.Parent = runebookFrame
-
-	local listLayout = Instance.new("UIListLayout")
-	listLayout.Padding = UDim.new(0, 5)
-	listLayout.Parent = scrollingFrame
-
-	local combos = {
-		{Symbols = "Circle", Result = "Inferno Ball"},
-		{Symbols = "Line", Result = "Mana Bolt"},
-		{Symbols = "Zigzag", Result = "Lightning Strike"},
-		{Symbols = "Circle + Line", Result = "Firebolt"},
-		-- Add more from SpellRegistry
-	}
-
-	for _, entry in ipairs(combos) do
-		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(1, 0, 0, 30)
-		label.BackgroundTransparency = 0.9
-		label.BackgroundColor3 = Color3.new(1, 1, 1)
-		label.Text = entry.Symbols .. " = " .. entry.Result
-		label.TextColor3 = Color3.new(1, 1, 1)
-		label.TextSize = 14
-		label.Font = Enum.Font.Gotham
-		label.Parent = scrollingFrame
-	end
-end
 
 function HUDController.ShowDamageNumber(target: Model, damage: number)
 	local head = target:FindFirstChild("Head")

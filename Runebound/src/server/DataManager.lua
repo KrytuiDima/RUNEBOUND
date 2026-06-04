@@ -14,6 +14,7 @@ local DEFAULT_DATA: Types.PlayerData = {
 	MaxMana = 100,
 	Stability = 10,
 	Resonance = 10,
+	StatPoints = 0,
 	Inventory = {},
 	SkillTree = {},
 	FirstJoinElement = nil
@@ -68,8 +69,41 @@ function DataManager.SyncAttributes(player: Player)
 		player:SetAttribute("Mana", data.Mana)
 		player:SetAttribute("MaxMana", data.MaxMana)
 		player:SetAttribute("Level", data.Level)
+		player:SetAttribute("Exp", data.Exp)
+		player:SetAttribute("StatPoints", data.StatPoints)
+		player:SetAttribute("Stability", data.Stability)
+		player:SetAttribute("Resonance", data.Resonance)
 		player:SetAttribute("Element", data.FirstJoinElement or "None")
 	end
+end
+
+function DataManager.AddExp(player: Player, amount: number)
+	DataManager.UpdatePlayerData(player, function(d)
+		d.Exp += amount
+		local needed = d.Level * 100
+		while d.Exp >= needed do
+			d.Exp -= needed
+			d.Level += 1
+			d.StatPoints += 5
+			needed = d.Level * 100
+		end
+		return d
+	end)
+end
+
+function DataManager.AllocateStat(player: Player, stat: string)
+	DataManager.UpdatePlayerData(player, function(d)
+		if d.StatPoints > 0 then
+			if stat == "Resonance" then
+				d.Resonance += 1
+				d.StatPoints -= 1
+			elseif stat == "Stability" then
+				d.Stability += 1
+				d.StatPoints -= 1
+			end
+		end
+		return d
+	end)
 end
 
 return DataManager

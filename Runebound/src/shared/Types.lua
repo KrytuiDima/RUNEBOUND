@@ -6,6 +6,8 @@ export type Point = {
 	t: number,
 }
 
+export type SpellArchetype = "Projectile" | "GroundAOE" | "Zone" | "Buff"
+
 export type Spell = {
 	ID: string,
 	Name: string,
@@ -14,6 +16,10 @@ export type Spell = {
 	ManaCost: number,
 	Element: string,
 	Tier: number,
+	Archetype: SpellArchetype,
+	Radius: number?,
+	Duration: number?,
+	Delay: number?,
 }
 
 export type PlayerData = {
@@ -23,6 +29,7 @@ export type PlayerData = {
 	MaxMana: number,
 	Stability: number,
 	Resonance: number,
+	StatPoints: number,
 	Inventory: {[string]: number},
 	SkillTree: {[string]: number},
 	FirstJoinElement: string?,

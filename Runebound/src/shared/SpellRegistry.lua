@@ -28,6 +28,7 @@ for i, element in ipairs(ELEMENTS) do
 		ManaCost = 5 + i,
 		Element = element,
 		Tier = 1,
+		Archetype = "Projectile",
 		Symbols = {SYMBOLS[1]}
 	})
 
@@ -41,6 +42,7 @@ for i, element in ipairs(ELEMENTS) do
 			ManaCost = 15 + i + j,
 			Element = element,
 			Tier = 2,
+			Archetype = "Projectile",
 			Symbols = {SYMBOLS[1], SYMBOLS[(j % #SYMBOLS) + 1]}
 		})
 	end
@@ -56,6 +58,7 @@ registerSpell({
 	ManaCost = 15,
 	Element = "Fire",
 	Tier = 1,
+	Archetype = "Projectile",
 	Symbols = {"Circle"}
 })
 
@@ -67,6 +70,7 @@ registerSpell({
 	ManaCost = 5,
 	Element = "Arcane",
 	Tier = 1,
+	Archetype = "Projectile",
 	Symbols = {"Line"}
 })
 
@@ -78,7 +82,63 @@ registerSpell({
 	ManaCost = 20,
 	Element = "Lightning",
 	Tier = 1,
+	Archetype = "Projectile",
 	Symbols = {"Zigzag"}
+})
+
+-- Advanced Mechanics Spells
+registerSpell({
+	ID = "IceFreeze",
+	Name = "Ice Freeze",
+	Description = "Freezes targets in an area after a delay.",
+	BaseDamage = 10,
+	ManaCost = 25,
+	Element = "Ice",
+	Tier = 2,
+	Archetype = "GroundAOE",
+	Radius = 15,
+	Delay = 1.5,
+	Symbols = {"Circle", "Circle"}
+})
+
+registerSpell({
+	ID = "IcicleRain",
+	Name = "Icicle Rain",
+	Description = "Rains icicles in a zone, dealing damage over time.",
+	BaseDamage = 5, -- per tick
+	ManaCost = 30,
+	Element = "Ice",
+	Tier = 2,
+	Archetype = "Zone",
+	Radius = 20,
+	Duration = 5,
+	Symbols = {"Zigzag", "Line"}
+})
+
+registerSpell({
+	ID = "PoisonPuddle",
+	Name = "Poison Puddle",
+	Description = "Creates a lingering poison zone.",
+	BaseDamage = 8, -- per tick
+	ManaCost = 20,
+	Element = "Nature",
+	Tier = 2,
+	Archetype = "Zone",
+	Radius = 12,
+	Duration = 8,
+	Symbols = {"Circle", "Zigzag"}
+})
+
+registerSpell({
+	ID = "HolySmite",
+	Name = "Holy Smite",
+	Description = "Smites an enemy or heals/buffs an ally.",
+	BaseDamage = 40,
+	ManaCost = 25,
+	Element = "Light",
+	Tier = 2,
+	Archetype = "Buff", -- Uses Buff archetype for dual targeting logic
+	Symbols = {"Caret", "Line"}
 })
 
 registerSpell({
@@ -89,6 +149,7 @@ registerSpell({
 	ManaCost = 10,
 	Element = "Fire",
 	Tier = 1,
+	Archetype = "Projectile",
 	Symbols = {"Circle", "Line"}
 })
 

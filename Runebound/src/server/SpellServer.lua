@@ -18,6 +18,10 @@ local SandboxEvent = ReplicatedStorage:FindFirstChild("SandboxEvent") or Instanc
 SandboxEvent.Name = "SandboxEvent"
 SandboxEvent.Parent = ReplicatedStorage
 
+local AllocateStatEvent = ReplicatedStorage:FindFirstChild("AllocateStatEvent") or Instance.new("RemoteEvent")
+AllocateStatEvent.Name = "AllocateStatEvent"
+AllocateStatEvent.Parent = ReplicatedStorage
+
 local VFXEvent = ReplicatedStorage:FindFirstChild("VFXEvent") or Instance.new("RemoteEvent")
 VFXEvent.Name = "VFXEvent"
 VFXEvent.Parent = ReplicatedStorage
@@ -58,6 +62,10 @@ SandboxEvent.OnServerEvent:Connect(function(player: Player, enabled: boolean)
 	sandboxPlayers[player.UserId] = enabled
 end)
 
+AllocateStatEvent.OnServerEvent:Connect(function(player: Player, stat: string)
+	DataManager.AllocateStat(player, stat)
+end)
+
 CastSpellEvent.OnServerEvent:Connect(function(player: Player, combo: {string}, points: {Types.Point})
 	local isSandbox = sandboxPlayers[player.UserId] or false
 
@@ -85,6 +93,11 @@ CastSpellEvent.OnServerEvent:Connect(function(player: Player, combo: {string}, p
 
 			-- Calculate Damage
 			local finalDamage = spell.BaseDamage * (accuracy ^ 2) * (1 + (data.Resonance / 100))
+
+			-- Add stability bonus to accuracy if needed
+			if accuracy < 1 then
+				accuracy = math.min(1, accuracy + (data.Stability / 500))
+			end
 
 			-- Execute Spell in Combat Engine
 			local character = player.Character
