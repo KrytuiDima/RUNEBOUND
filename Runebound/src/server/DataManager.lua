@@ -15,9 +15,11 @@ local DEFAULT_DATA: Types.PlayerData = {
 	Stability = 10,
 	Resonance = 10,
 	StatPoints = 0,
-	Inventory = {},
+	SkillPoints = 3,
+	Inventory = {["Gold"] = 500},
 	SkillTree = {},
-	FirstJoinElement = nil
+	FirstJoinElement = nil,
+	EquippedWand = "ApprenticeWand", -- Start with basic wand for testing
 }
 
 function DataManager.LoadData(player: Player)
@@ -71,9 +73,12 @@ function DataManager.SyncAttributes(player: Player)
 		player:SetAttribute("Level", data.Level)
 		player:SetAttribute("Exp", data.Exp)
 		player:SetAttribute("StatPoints", data.StatPoints)
+		player:SetAttribute("SkillPoints", data.SkillPoints)
 		player:SetAttribute("Stability", data.Stability)
 		player:SetAttribute("Resonance", data.Resonance)
 		player:SetAttribute("Element", data.FirstJoinElement or "None")
+		player:SetAttribute("Gold", data.Inventory["Gold"] or 0)
+		player:SetAttribute("EquippedWand", data.EquippedWand or "None")
 	end
 end
 
@@ -86,6 +91,21 @@ function DataManager.AddExp(player: Player, amount: number)
 			d.Level += 1
 			d.StatPoints += 5
 			needed = d.Level * 100
+		end
+		return d
+	end)
+end
+
+function DataManager.SpendSkillPoint(player: Player, statName: string)
+	DataManager.UpdatePlayerData(player, function(d)
+		if d.SkillPoints > 0 then
+			if statName == "Resonance" then
+				d.Resonance += 5
+				d.SkillPoints -= 1
+			elseif statName == "Stability" then
+				d.Stability += 5
+				d.SkillPoints -= 1
+			end
 		end
 		return d
 	end)

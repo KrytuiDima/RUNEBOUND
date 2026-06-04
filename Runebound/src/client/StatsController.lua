@@ -21,6 +21,10 @@ function StatsController.Init()
 	statsGui.Name = "StatsUI"
 	statsGui.Parent = PlayerGui
 
+	local SpendSkillPointEvent = ReplicatedStorage:FindFirstChild("SpendSkillPointEvent") or Instance.new("RemoteEvent")
+	SpendSkillPointEvent.Name = "SpendSkillPointEvent"
+	SpendSkillPointEvent.Parent = ReplicatedStorage
+
 	local toggleButton = Instance.new("TextButton")
 	toggleButton.Name = "OpenStats"
 	toggleButton.Size = UDim2.new(0, 100, 0, 30)
@@ -70,7 +74,7 @@ function StatsController.Init()
 	resButton.Text = "+"
 	resButton.Parent = mainFrame
 	resButton.MouseButton1Click:Connect(function()
-		AllocateStatEvent:FireServer("Resonance")
+		SpendSkillPointEvent:FireServer("Resonance")
 	end)
 
 	stabilityLabel = Instance.new("TextLabel")
@@ -88,7 +92,7 @@ function StatsController.Init()
 	stabButton.Text = "+"
 	stabButton.Parent = mainFrame
 	stabButton.MouseButton1Click:Connect(function()
-		AllocateStatEvent:FireServer("Stability")
+		SpendSkillPointEvent:FireServer("Stability")
 	end)
 
 	toggleButton.MouseButton1Click:Connect(function()
@@ -97,6 +101,7 @@ function StatsController.Init()
 
 	-- Sync Listeners
 	Player:GetAttributeChangedSignal("StatPoints"):Connect(StatsController.Refresh)
+	Player:GetAttributeChangedSignal("SkillPoints"):Connect(StatsController.Refresh)
 	Player:GetAttributeChangedSignal("Resonance"):Connect(StatsController.Refresh)
 	Player:GetAttributeChangedSignal("Stability"):Connect(StatsController.Refresh)
 
@@ -104,7 +109,9 @@ function StatsController.Init()
 end
 
 function StatsController.Refresh()
-	pointsLabel.Text = "Stat Points: " .. (Player:GetAttribute("StatPoints") or 0)
+	local spts = Player:GetAttribute("StatPoints") or 0
+	local skpts = Player:GetAttribute("SkillPoints") or 0
+	pointsLabel.Text = "Stat Pts: " .. spts .. " | Skill Pts: " .. skpts
 	resonanceLabel.Text = "Resonance: " .. (Player:GetAttribute("Resonance") or 10)
 	stabilityLabel.Text = "Stability: " .. (Player:GetAttribute("Stability") or 10)
 end

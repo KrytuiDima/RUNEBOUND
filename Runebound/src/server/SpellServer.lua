@@ -22,6 +22,10 @@ local AllocateStatEvent = ReplicatedStorage:FindFirstChild("AllocateStatEvent") 
 AllocateStatEvent.Name = "AllocateStatEvent"
 AllocateStatEvent.Parent = ReplicatedStorage
 
+local SpendSkillPointEvent = ReplicatedStorage:FindFirstChild("SpendSkillPointEvent") or Instance.new("RemoteEvent")
+SpendSkillPointEvent.Name = "SpendSkillPointEvent"
+SpendSkillPointEvent.Parent = ReplicatedStorage
+
 local VFXEvent = ReplicatedStorage:FindFirstChild("VFXEvent") or Instance.new("RemoteEvent")
 VFXEvent.Name = "VFXEvent"
 VFXEvent.Parent = ReplicatedStorage
@@ -66,12 +70,24 @@ AllocateStatEvent.OnServerEvent:Connect(function(player: Player, stat: string)
 	DataManager.AllocateStat(player, stat)
 end)
 
+SpendSkillPointEvent.OnServerEvent:Connect(function(player: Player, statName: string)
+	DataManager.SpendSkillPoint(player, statName)
+end)
+
 CastSpellEvent.OnServerEvent:Connect(function(player: Player, combo: {string}, points: {Types.Point})
 	local isSandbox = sandboxPlayers[player.UserId] or false
+	local data = DataManager.GetPlayerData(player)
+	if not data then return end
 
 	local isValid, accuracy = true, 1.0
 	if not isSandbox then
+		local threshold = 0.7 - (data.Stability / 100)
+		-- Note: ValidateGesture currently doesn't take threshold, we should update it or use it here
 		isValid, accuracy = ValidateGesture(player, points)
+		-- Simple implementation: if accuracy < threshold, it's invalid
+		if accuracy < threshold then
+			isValid = false
+		end
 	end
 
 	if not isValid then
@@ -81,18 +97,31 @@ CastSpellEvent.OnServerEvent:Connect(function(player: Player, combo: {string}, p
 
 	local spell = SpellRegistry.GetSpellBySymbols(combo)
 	if spell then
-		local data = DataManager.GetPlayerData(player)
-		if data and (isSandbox or data.Mana >= spell.ManaCost) then
+		local manaCost = spell.ManaCost
+		local resonanceBonus = 0
+		local damageMultiplier = 1.0
+
+		-- Wand Buffs
+		if data.EquippedWand == "ApprenticeWand" then
+			resonanceBonus = 10
+			manaCost = math.max(0, manaCost - 1)
+		elseif data.EquippedWand == "ArchmageWand" then
+			resonanceBonus = 50
+			damageMultiplier = 1.2
+		end
+
+		if isSandbox or data.Mana >= manaCost then
 			-- Deduct Mana
 			if not isSandbox then
 				DataManager.UpdatePlayerData(player, function(d)
-					d.Mana -= spell.ManaCost
+					d.Mana -= manaCost
 					return d
 				end)
 			end
 
 			-- Calculate Damage
-			local finalDamage = spell.BaseDamage * (accuracy ^ 2) * (1 + (data.Resonance / 100))
+			local effectiveResonance = data.Resonance + resonanceBonus
+			local finalDamage = spell.BaseDamage * (accuracy ^ 2) * (1 + (effectiveResonance / 100)) * damageMultiplier
 
 			-- Add stability bonus to accuracy if needed
 			if accuracy < 1 then

@@ -29,10 +29,12 @@ export type PlayerData = {
 	MaxMana: number,
 	Stability: number,
 	Resonance: number,
-	StatPoints: number,
+	StatPoints: number, -- For raw stat points
+	SkillPoints: number, -- For the skill tree upgrades
 	Inventory: {[string]: number},
 	SkillTree: {[string]: number},
 	FirstJoinElement: string?,
+	EquippedWand: string?,
 }
 
 export type Recipe = {
